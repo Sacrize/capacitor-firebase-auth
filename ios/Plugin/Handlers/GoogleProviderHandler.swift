@@ -9,6 +9,7 @@ class GoogleProviderHandler: NSObject, ProviderHandler {
 
     var plugin: CapacitorFirebaseAuth? = nil
     var configuration: GIDConfiguration? = nil
+    var scopes: [String] = []
 
     func initialize(plugin: CapacitorFirebaseAuth) {
         self.plugin = plugin
@@ -33,8 +34,10 @@ class GoogleProviderHandler: NSObject, ProviderHandler {
                                               hostedDomain: hostedDomain,
                                               openIDRealm: openIDRealm)
 
+        GIDSignIn.sharedInstance.configuration = self.configuration
+
         if let scopes = permissions["google"] as? [String], let presentingVC = plugin.bridge?.viewController {
-            GIDSignIn.sharedInstance.addScopes(scopes, presenting: presentingVC)
+            self.scopes = scopes
         }
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleOpenUrl(_ :)),
@@ -65,26 +68,26 @@ class GoogleProviderHandler: NSObject, ProviderHandler {
     }
 
     func signIn(call: CAPPluginCall) {
-        guard let configuration = configuration, let presentingVC = plugin?.bridge?.viewController
+        guard let let presentingVC = self.plugin?.bridge?.viewController
         else { return }
 
-        GIDSignIn.sharedInstance.signIn(with: configuration, presenting: presentingVC) { user, error in
+        GIDSignIn.sharedInstance.signIn(withPresenting: presentingVC, hint: nil, additionalScopes: self.scopes) { [unowned self] result, error in
             if let error = error {
                 self.plugin?.handleError(message: error.localizedDescription)
                 return
             }
-            guard let user = user else {
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString
+            else {
                 self.plugin?.handleError(message: "There is no authenticated user")
                 return
             }
 
-            guard let idToken = user.authentication.idToken else {
-                self.plugin?.handleError(message: "There is no authentication idToken on GIDGoogleUser")
-                return
-            }
+            let accessToken = user.accessToken.tokenString
+            let serverAuthCode = result?.serverAuthCode
 
             let credential = GoogleAuthProvider.credential(withIDToken: idToken,
-                                                           accessToken: user.authentication.accessToken)
+                                                           accessToken: accessToken)
             self.plugin?.handleAuthCredentials(credential: credential)
         }
     }
@@ -103,7 +106,7 @@ class GoogleProviderHandler: NSObject, ProviderHandler {
             jsResult[key] = value
         }
 
-        jsResult["idToken"] = currentUser.authentication.idToken
+        jsResult["idToken"] = currentUser.idToken?.tokenString
 
         return jsResult
     }
