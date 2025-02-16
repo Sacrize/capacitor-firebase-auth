@@ -68,7 +68,7 @@ class GoogleProviderHandler: NSObject, ProviderHandler {
     }
 
     func signIn(call: CAPPluginCall) {
-        guard let let presentingVC = self.plugin?.bridge?.viewController
+        guard let presentingVC = self.plugin?.bridge?.viewController
         else { return }
 
         GIDSignIn.sharedInstance.signIn(withPresenting: presentingVC, hint: nil, additionalScopes: self.scopes) { [unowned self] result, error in
