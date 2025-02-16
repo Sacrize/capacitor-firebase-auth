@@ -122,7 +122,7 @@ public class CapacitorFirebaseAuth extends Plugin {
 
             if (handler.isAuthenticated()) {
                 JSObject jsResult = this.build(null, call);
-                call.success(jsResult);
+                call.resolve(jsResult);
             } else {
                 this.saveCall(call);
                 handler.signIn(call);
@@ -144,7 +144,7 @@ public class CapacitorFirebaseAuth extends Plugin {
             this.firebaseAuth.signOut();
         }
 
-        call.success();
+        call.resolve();
     }
 
     @Override
@@ -198,7 +198,7 @@ public class CapacitorFirebaseAuth extends Plugin {
             nativeAuth(savedCall, credential);
         } else {
             JSObject jsResult = this.build(credential, savedCall);
-            savedCall.success(jsResult);
+            savedCall.resolve(jsResult);
         }
     }
 
@@ -217,7 +217,7 @@ public class CapacitorFirebaseAuth extends Plugin {
                                 savedCall.reject("Ops, no Firebase user after Sign In with Credential succeed");
                             } else {
                                 JSObject jsResult = build(credential, savedCall);
-                                savedCall.success(jsResult);
+                                savedCall.resolve(jsResult);
                             }
                         } else {
                             // If sign in fails, display a message to the user.
