@@ -50,7 +50,7 @@ public class PhoneProviderHandler implements ProviderHandler {
                 jsUser.put("verificationId", mVerificationId);
                 jsUser.put("verificationCode", mVerificationCode);
 
-                call.success(jsUser);
+                call.resolve(jsUser);
             }
 
             @Override
